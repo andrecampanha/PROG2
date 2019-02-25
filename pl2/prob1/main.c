@@ -30,5 +30,7 @@ int main()
         if(vec[i] % 2 != 0) printf("%d ", vec[i]);
     printf("]\n");
 
+    free(vec);
+
 
 }
