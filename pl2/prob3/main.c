@@ -2,38 +2,47 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_STRING 81
-#define N_STRINGS 3
+#define NSTRINGS 3
 
 int main()
 {
-    char *vec[N_STRINGS] = {NULL};
-    char aux[MAX_STRING + 1];
-    int pos;
+    char **v;
+    char str[80];
+    int i, pos;
+    v = malloc(NSTRINGS * sizeof(char*));
 
-    do
+    while(1)
     {
-        for(int i = 0; i < N_STRINGS; i++)
-            printf("[%d] %s\n", i + 1, vec[i] == NULL ? "(vazio)" : vec[i]);
+        for(i = 0; i < NSTRINGS; i++)
+		{
+			printf("[%d] ", i+1);
+			if(v[i] == NULL)
+				printf("(vazio)\n");
+			else
+            	printf("%s\n", v[i]);
+		}
 
-        printf("Posição da nova string (1 a %d): ", N_STRINGS); scanf("%d", &pos);
-        pos--;
-        getchar();
-        if(pos < 0 || pos >= N_STRINGS)
-            continue;
+		do        
+		{
+            printf("Posicao para nova string (1 a %d): ", NSTRINGS);
+            scanf("%d", &pos);
+            getchar(); /* elimina \n */
+		}
+		while(pos < 0 || pos > NSTRINGS);
 
-        printf("Nova string: ");
-        fgets(aux, MAX_STRING + 1, stdin);
-        aux[strlen(aux) - 1] = '\0';
+        if (pos == 0)
+            break;
 
-        if(vec[pos] != NULL)
-            free(vec[pos]);
-        vec[pos] = malloc(strlen(aux) + 1);
-        strcpy(vec[pos], aux);
-    } while(pos != -1);
+        printf("Nova String: ");
+        fgets(str, 80, stdin);
+        str[strlen(str) - 1] = '\0';
 
-    for(int i = 0; i < N_STRINGS; i++)
-    {
-        free(vec[i]);
+        v[pos - 1] = realloc(v[pos - 1], strlen(str));
+		strcpy(v[pos - 1], str);
     }
+
+    for(i = 0; i < NSTRINGS; i++)
+        free(v[i]);
+    free(v);
+    return 0;
 }
