@@ -96,7 +96,7 @@ int main(int argc, char const *argv[])
     }
     printf("\n---\n\nO jogo Duke Nukem (PS3) encontra-se na posicao %d.\n", i);
 
-    int pos = lista_insere_ordenada(lst, "Minesweeper (PC)");
+    int pos = lista_insere_ordenada(lst, "j");
     printf("O jogo Minesweeper (PC) foi inserido na posicao %d.\n", pos);
     print_lista(lst);
 
