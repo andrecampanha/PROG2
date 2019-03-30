@@ -16,11 +16,12 @@ float calcula_total(char* expressao_rpn)
 {
     pilha *p = pilha_nova();
     if(p == NULL) return 0;
-    int flag = 0;
     char *token;
     int opr1, opr2;
 
-    while((token = strtok(!flag ? expressao_rpn : NULL, " ")) != NULL)
+    token = strtok(expressao_rpn, " ");
+
+    do
     {
         switch (token[0])
         {
@@ -44,8 +45,8 @@ float calcula_total(char* expressao_rpn)
                 pilha_push(p, atoi(token));
                 break;
         }
-        flag = 1;
     }
+    while((token = strtok(NULL, " ")) != NULL);
 
     opr1 = pilha_top(p);
     pilha_apaga(p);

@@ -18,7 +18,11 @@ contentor* contentor_novo(char* dest, float val)
 	if(str == NULL) return NULL;
 
 	contentor *novo = malloc(sizeof(contentor));
-	if(novo == NULL) return NULL;
+	if(novo == NULL)
+	{
+		free(str);
+		return NULL;
+	}
 
 	strcpy(str, dest);
 	novo->destino = str;

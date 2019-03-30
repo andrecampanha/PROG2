@@ -1,4 +1,10 @@
 .vscode
 t*/
+!trab*/
+!teste*/
+
 pl*/*/bin
 pl*/*/prob
+
+trab*/bin
+trab*/prob

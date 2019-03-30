@@ -65,8 +65,10 @@ contentor* expedir_contentor(armazem* armz)
 	if(armazem_vazio(armz))	return NULL;
 	pilha *front = fila_front(armz->contentores);
 
-	contentor *res = pilha_top(front);
+	contentor *atual = pilha_top(front);
+	contentor *res = contentor_novo(atual->destino, atual->valor);
 	pilha_pop(front);
+	
 
 	if(pilha_tamanho(front) == 0)
 		fila_pop(armz->contentores);
