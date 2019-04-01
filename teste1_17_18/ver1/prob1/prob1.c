@@ -75,13 +75,8 @@ int move_para_inicio(lista *lst, char *str1)
 	{
 		if(strstr(el->str, str1) != NULL)
 		{
-			prox = el->proximo;
-			el->proximo->anterior = el->anterior;
-			el->anterior->proximo = el->proximo;
-			el->anterior = NULL;
-			el->proximo = lst->inicio;
-			lst->inicio->anterior = el;
-			el = prox;
+			if(lista_insere(lst, el->str, lst->inicio) == NULL) return 0;
+			if((el = lista_remove(lst, el)) == NULL) return 0;
 			c++;
 		} else
 			el = el->proximo;
