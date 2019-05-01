@@ -46,6 +46,7 @@ lista* filtra_titulos(lista *lista1, lista *lista2)
 /*** problema 1.2 ***/
 int retira_comecados_por(lista *lst, char *inicio)
 {
+	if(lst == NULL || inicio == NULL) return 0;
 	int count = 0;
 	l_elemento *e, *aux;
 	int inicio_len = strlen(inicio);
@@ -55,7 +56,7 @@ int retira_comecados_por(lista *lst, char *inicio)
 		{
 			aux = e;
 			e = e->anterior;
-			lista_remove(lst, aux);
+			if(lista_remove(lst, aux) == NULL) return 0;
 			count++;
 		}
 	}
