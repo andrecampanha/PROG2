@@ -1,0 +1,13 @@
+cem_anos_de_solidao livros 10 2 2020-12-31
+polvo peixaria 2 3 2019-06-12
+salmonete peixaria 1 3 2019-06-10
+alho frescos 6 1 2019-05-18
+pescada peixaria 81 2 2020-04-21
+cebola frescos 4 1 2019-05-15
+metamorfose livros 8 1 2028-06-07
+admiravel_mundo_novo livros 4 4 2022-11-20
+alface frescos 8 1 2019-05-22
+memorial_do_convento livros 10 2 2030-10-05
+creme_hidratante beleza 20 8 2023-01-01
+robalo peixaria 14 2 2030-04-14
+
