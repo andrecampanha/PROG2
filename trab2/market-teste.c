@@ -12,7 +12,7 @@
 #define MAX_CATEGNAME_LEN 100
 #define N_CATEG 10
 #define CAP_ALL_CATEG 3
-#define VERBOSITY 1  // colocar a 1 se desejar imprimir mais detalhes sobre os testes
+#define VERBOSITY 0  // colocar a 1 se desejar imprimir mais detalhes sobre os testes
 
 const char DEFAULT_FILE[32] = "armazem.txt";
 const char CATEGORIES[N_CATEG][MAX_CATEGNAME_LEN] = {

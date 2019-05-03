@@ -23,6 +23,7 @@ no_avl* avl_no_valormin(no_avl* no);
 no_avl* avl_no_valormax(no_avl* no);
 int max(int a, int b);
 int min(int a, int b);
+int enoughItems(heap* h, int numPorItem, int totalItems);
 void avlNoApaga(no_avl* node);
 void avlNoCopia(no_avl* nodeDest, no_avl* nodeSource);
 void avlNoValorCopia(no_avl* nodeDest, no_avl* nodeSrc);
@@ -520,33 +521,26 @@ elemento_t** criar_montra(arvore_avl* avl, const char* categName, int numPorItem
     if(no == NULL || no->categ == NULL) return NULL;
     heap *hp = no->categ->itemTree;
 
-    heap *hcpy, *haux;
+    if(!enoughItems(hp, numPorItem, totalItems))
+        return NULL;
 
-    hcpy = heap_nova(hp->capacidade);
-    if(hcpy == NULL) return NULL;
-    hcpy->tamanho = hp->tamanho;
-    for(int i = 1; i <= hp->tamanho; i++)
-    {
-        hcpy->elementos[i] = elemento_cpy(hp->elementos[i]);
-        if(hcpy->elementos[i] == NULL)
-        {
-            heap_apaga(hcpy);
-            return NULL;
-        }
-    }
-
-    haux = heap_nova(hp->capacidade);
+    heap *haux = heap_nova(hp->capacidade);
+    if(haux == NULL)
+        return NULL;
 
     elemento_t **arr = malloc(sizeof(elemento_t*) * totalItems);
     if(arr == NULL)
+    {
+        heap_apaga(haux);
         return NULL;
+    }
     *tamanhoArray = 0;
 
     elemento_t *new, *cur;
 
-    while(totalItems > 0 || hcpy->tamanho > 0)
+    while(totalItems > 0 || hp->tamanho > 0)
     {
-        cur = heap_remove(hcpy);
+        cur = heap_remove(hp);
         new = elemento_cpy(cur);
         new->qty = min(min(numPorItem, totalItems), cur->qty);
         
@@ -561,28 +555,10 @@ elemento_t** criar_montra(arvore_avl* avl, const char* categName, int numPorItem
         }
     }
 
-    if(totalItems > 0)
-    {
-        for(int i = 0; i < *tamanhoArray; i++)
-            free(arr[i]);
-        free(arr);
-        *tamanhoArray = 0;
-        heap_apaga(hcpy);
-        heap_apaga(haux);
-
-        return NULL;
-    }
-
     while(haux->tamanho > 0)
-    {
-        heap_insere(hcpy, heap_remove(haux));
-    }
+        heap_insere(hp, heap_remove(haux));
 
-    heap_apaga(hp);
     heap_apaga(haux);
-    no->categ->itemTree = hcpy;
-
-    arr = realloc(arr, sizeof(elemento_t*) * (*tamanhoArray));
     return arr;
 }
 
