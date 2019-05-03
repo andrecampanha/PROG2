@@ -23,12 +23,17 @@ no_avl* avl_no_valormin(no_avl* no);
 no_avl* avl_no_valormax(no_avl* no);
 int max(int a, int b);
 int min(int a, int b);
+void avlNoApaga(no_avl* node);
+void avlNoCopia(no_avl* nodeDest, no_avl* nodeSource);
+void avlNoValorCopia(no_avl* nodeDest, no_avl* nodeSrc);
 
 
 //////   Implementacao Elemento e Calculo Metrica (5.1)  ///////
 
 elemento_t* elemento_novo(const char* nameItem, const char* expDate, int qty, int sellRate)
 {
+    if(nameItem == NULL || expDate == NULL) return NULL;
+
     elemento_t *elem = malloc(sizeof(elemento_t));
     if(elem == NULL) return NULL;
 
@@ -43,15 +48,18 @@ elemento_t* elemento_novo(const char* nameItem, const char* expDate, int qty, in
 
 void elemento_apaga(elemento_t* elem)
 {
-    free(elem);
+	if (elem)
+		free(elem);
     elem = NULL;
 }
 
 //   Implementacao metrica prioridade  //
-
+	
 float calcMetrica(elemento_t* elem)
 {
-    struct tm tm1, tm2;
+    if(elem == NULL) return -1;
+
+    struct tm tm1 = { 0 }, tm2 = { 0 };
     char curr[] = CURDATE, expd[11];
     strcpy(expd, elem->expirationDate);
 
@@ -65,7 +73,11 @@ float calcMetrica(elemento_t* elem)
     tm2.tm_mday = atoi(strtok(NULL, "-"));
     tm2.tm_hour = tm2.tm_min = tm2.tm_sec = 0;
 
-    double diff = difftime(mktime(&tm1), mktime(&tm2)) / 3600 / 24;
+    time_t t1, t2;
+    t1 = mktime(&tm1);
+    t2 = mktime(&tm2);
+
+    double diff = difftime(t1, t2) / 3600 / 24;
 
     return 1 / (diff + ((float) 1000 / elem->sellRate));
 }
@@ -77,7 +89,7 @@ float calcMetrica(elemento_t* elem)
 
 heap* heap_nova(int capacidade)
 {
-    heap *h = malloc(sizeof(heap));
+	heap *h = malloc(sizeof(heap));
     if(h == NULL) return NULL;
     h->capacidade = capacidade;
     h->tamanho = 0;
@@ -137,7 +149,7 @@ int heap_insere(heap *h, elemento_t* elem)
 
 elemento_t* heap_remove(heap * h)
 {
-    if(h == NULL) return NULL;
+	if(h == NULL) return NULL;
     elemento_t *item = h->elementos[1];
 
     h->elementos[1] = h->elementos[h->tamanho];
@@ -174,7 +186,7 @@ void mostraHeap(heap *h)
     if(!h)
         return;
 
-    for(int indice =1; indice<=h->tamanho; indice++)
+    for(int indice =1; indice<=(h->tamanho); indice++)
     {
         printf("%s %s %d %d %f\n",h->elementos[indice]->nameItem, h->elementos[indice]->expirationDate,
                         h->elementos[indice]->qty,h->elementos[indice]->sellRate,
@@ -215,6 +227,9 @@ category_t* novaCategoria(heap* itemTree, char* categName)
 
 void categoriaApaga(category_t* categ)
 {
+    if(categ==NULL)
+        return;
+    
     heap_apaga(categ->itemTree);
     free(categ->categName);
     categ->categName = NULL;
@@ -312,16 +327,13 @@ no_avl* avl_insere(no_avl *no, category_t* categ)
     return no;
 }
 
-no_avl* avl_remove(no_avl *no, const char* categStr)
+no_avl* avl_remove(no_avl* no, const char *categStr)
 {
-    // Implementacao exercicio 5.4.4
-
     /* 1. efetua remocao normal de arvore binaria de pesquisa */
 
     if (no == NULL)
         return no;
-
-    /* se o nome da categoria a ser removida é menor do que a str da raiz,
+    /* se a str a ser removida é menor do que a str da raiz,
        entao esta' na sub-arvore esquerda */
     if ( strcmp(categStr, no->categ->categName) < 0 )
         no->esquerda = avl_remove(no->esquerda, categStr);
@@ -349,18 +361,10 @@ no_avl* avl_remove(no_avl *no, const char* categStr)
             else /* caso de um filho */
             {
                 /* copia os conteudos do filho que não está vazio */
-                no->categ->categName = realloc(no->categ->categName, (strlen(temp->categ->categName)+1)*sizeof(char));
-                strcpy(no->categ->categName, temp->categ->categName);
-                heap_apaga(no->categ->itemTree);
-                no->categ->itemTree = temp->categ->itemTree;
-                no->esquerda = temp->esquerda;
-                no->direita = temp->direita;
-                no->altura = temp->altura;
+                avlNoCopia(no,temp);
+				//
             }
-
-            free(temp->categ->categName);
-            free(temp->categ);
-            free(temp);
+            avlNoApaga(temp);
         }
         else
         {
@@ -368,20 +372,16 @@ no_avl* avl_remove(no_avl *no, const char* categStr)
             no_avl* temp = avl_no_valormin(no->direita);
 
             /* copia o valor em.ordem do sucessor para este no' */
-            no->categ->categName = realloc(no->categ->categName, (strlen(temp->categ->categName)+1)*sizeof(char));
-            strcpy(no->categ->categName, temp->categ->categName);
-            heap_apaga(no->categ->itemTree);
-            no->categ->itemTree = temp->categ->itemTree;
-
+            avlNoValorCopia(no,temp);
             /* apaga o sucessor em-ordem */
             no->direita = avl_remove(no->direita, temp->categ->categName);
         }
     }
-
+	
     /* se a arvore tinha apenas um no, então retorna */
     if (no == NULL)
       return no;
-
+	
     /* 2. atualiza a altura do no corrente */
     no->altura = max(avl_altura(no->esquerda), avl_altura(no->direita)) + 1;
 
@@ -390,7 +390,6 @@ no_avl* avl_remove(no_avl *no, const char* categStr)
     int balance = calc_balanceamento(no);
 
     /* se o no deixou de estar balanceado, existem 4 casos */
-
     if (balance > 1) {
         /* Arvore e' right-heavy */
         if (calc_balanceamento(no->direita) < 0) {
@@ -417,9 +416,6 @@ no_avl* avl_remove(no_avl *no, const char* categStr)
     }
     /* caso esteja balanceada retorna o apontador para o no (inalterado) */
     return no;
-
-    // Default
-    return NULL;
 }
 
 no_avl* avl_pesquisa(no_avl *no, const char* categStr)
@@ -429,23 +425,32 @@ no_avl* avl_pesquisa(no_avl *no, const char* categStr)
 
     if(strcmp(categStr, no->categ->categName) < 0)
         return avl_pesquisa(no->esquerda, categStr);
-
     else if(strcmp(categStr, no->categ->categName) > 0)
         return avl_pesquisa(no->direita, categStr);
-
     else
         return no;
-    return NULL;
+}
+
+void avl_apaga_i(no_avl *no)
+{
+	if (!no)
+		return;
+	avl_apaga_i(no->esquerda);
+	avl_apaga_i(no->direita);
+	avlNoApaga(no);
 }
 
 void avl_apaga(arvore_avl* avl)
 {
 	if (!avl) return;
-    while(avl->raiz != NULL)
+	
+	avl_apaga_i(avl->raiz);
+	
+/*    while(avl->raiz != NULL)
     {
         avl->raiz = avl_remove(avl->raiz, avl->raiz->categ->categName);
-    }
-
+    }*/
+    
     free(avl);
 }
 
@@ -486,11 +491,9 @@ int artigo_adiciona(arvore_avl *avl, elemento_t* elem, char *categName, int capC
         }
     }
 
-
     heap_insere(categ->itemTree, elem);
 
     return 1;
-
 }
 
 //////////////////////////////////////////////
@@ -508,7 +511,6 @@ elemento_t *elemento_cpy(elemento_t *ori)
     return cpy;
 }
 
-
 ///   Implementacao montagem montra (5.5)   ///
 elemento_t** criar_montra(arvore_avl* avl, const char* categName, int numPorItem, int totalItems, int* tamanhoArray)
 {
@@ -516,8 +518,8 @@ elemento_t** criar_montra(arvore_avl* avl, const char* categName, int numPorItem
 
     no_avl *no = avl_pesquisa(avl->raiz, categName);
     if(no == NULL || no->categ == NULL) return NULL;
-
     heap *hp = no->categ->itemTree;
+
     heap *hcpy, *haux;
 
     hcpy = heap_nova(hp->capacidade);
@@ -541,7 +543,7 @@ elemento_t** criar_montra(arvore_avl* avl, const char* categName, int numPorItem
     *tamanhoArray = 0;
 
     elemento_t *new, *cur;
-    int i = 1;
+
     while(totalItems > 0 || hcpy->tamanho > 0)
     {
         cur = heap_remove(hcpy);
@@ -681,4 +683,76 @@ int max(int a, int b)
 int min(int a, int b)
 {
     return (a < b)? a : b;
+}
+
+int enoughItems(heap* h, int numPorItem, int totalItems)
+{
+    int qtyCounter = 0;
+    for (int i=1; i<=(h->tamanho); i++)
+    {
+        qtyCounter += min(h->elementos[i]->qty,numPorItem);
+        if(qtyCounter>=totalItems)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void avlNoApaga(no_avl* node)
+{
+
+    if(!node)
+        return;
+
+    categoriaApaga(node->categ);
+    node->esquerda = NULL;
+    node->direita = NULL;
+    node->altura = 0;
+    free(node);
+    node = NULL;
+}
+
+void avlNoCopia(no_avl* nodeDest, no_avl* nodeSrc)
+{
+
+    if(!nodeSrc || !nodeDest)
+        return;
+
+    nodeDest->categ->categName = realloc(nodeDest->categ->categName, (strlen(nodeSrc->categ->categName)+1)*sizeof(char));
+    strcpy(nodeDest->categ->categName, nodeSrc->categ->categName);
+    heap_apaga(nodeDest->categ->itemTree);
+    nodeDest->categ->itemTree = heap_nova(nodeSrc->categ->itemTree->capacidade);
+
+    for(int i=RAIZ; i<=(nodeSrc->categ->itemTree->tamanho); i++)
+    {
+        nodeDest->categ->itemTree->elementos[i] = elemento_novo(nodeSrc->categ->itemTree->elementos[i]->nameItem,
+        nodeSrc->categ->itemTree->elementos[i]->expirationDate,nodeSrc->categ->itemTree->elementos[i]->qty,
+        nodeSrc->categ->itemTree->elementos[i]->sellRate);
+    }
+	nodeDest->categ->itemTree->tamanho = nodeSrc->categ->itemTree->tamanho;
+    nodeDest->esquerda = nodeSrc->esquerda;
+    nodeDest->direita = nodeSrc->direita;
+    nodeDest->altura = nodeSrc->altura;
+
+}
+
+void avlNoValorCopia(no_avl* nodeDest, no_avl* nodeSrc)
+{
+
+    if(!nodeSrc || !nodeDest)
+        return;
+
+    nodeDest->categ->categName = realloc(nodeDest->categ->categName, (strlen(nodeSrc->categ->categName)+1)*sizeof(char));
+    strcpy(nodeDest->categ->categName, nodeSrc->categ->categName);
+    heap_apaga(nodeDest->categ->itemTree);
+    nodeDest->categ->itemTree = heap_nova(nodeSrc->categ->itemTree->capacidade);
+
+    for(int i=RAIZ; i<=(nodeSrc->categ->itemTree->tamanho); i++)
+    {
+        nodeDest->categ->itemTree->elementos[i] = elemento_novo(nodeSrc->categ->itemTree->elementos[i]->nameItem,
+        nodeSrc->categ->itemTree->elementos[i]->expirationDate,nodeSrc->categ->itemTree->elementos[i]->qty,
+        nodeSrc->categ->itemTree->elementos[i]->sellRate);
+    }
+	nodeDest->categ->itemTree->tamanho = nodeSrc->categ->itemTree->tamanho;
 }
