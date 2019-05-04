@@ -94,7 +94,7 @@ heap* heap_nova(int capacidade)
     if(h == NULL) return NULL;
     h->capacidade = capacidade;
     h->tamanho = 0;
-    h->elementos = malloc(sizeof(elemento_t*) * (capacidade + 1));
+    h->elementos = malloc(sizeof(elemento_t*) * (capacidade + RAIZ));
     if (h->elementos == NULL)
     {
         free(h);
@@ -106,10 +106,8 @@ heap* heap_nova(int capacidade)
 
 void heap_apaga(heap *h)
 {
-	for(int i = 1; i <= h->tamanho; i++)
-    {
-        free(h->elementos[i]);
-    }
+	for(int i = RAIZ; i <= h->tamanho; i++)
+        elemento_apaga(h->elementos[i]);
     free(h->elementos);
     free(h);
 }
@@ -153,12 +151,12 @@ elemento_t* heap_remove(heap * h)
 	if(h == NULL) return NULL;
     elemento_t *item = h->elementos[1];
 
-    h->elementos[1] = h->elementos[h->tamanho];
+    h->elementos[RAIZ] = h->elementos[h->tamanho];
     h->tamanho--;
 
-    int curr = 1;
-    int leftChild = 2 * curr;
-    int rightChild = 2 * curr + 1;
+    int curr = RAIZ;
+    int leftChild = FILHO_ESQ(curr);
+    int rightChild = FILHO_DIR(curr);
     int selectedChild;
 
     while(leftChild <= h->tamanho)
@@ -276,9 +274,10 @@ no_avl* avl_novo_no(category_t* categ)
     return NULL;
 }
 
+
 no_avl* avl_insere(no_avl *no, category_t* categ)
 {
-    if(categ == NULL) return NULL;
+    //if(categ == NULL) return NULL;
     /* 1.  efetua insercao normal de arvore binaria de pesquisa */
     if (no == NULL)
         return avl_novo_no(categ);
@@ -287,9 +286,8 @@ no_avl* avl_insere(no_avl *no, category_t* categ)
         no->esquerda  = avl_insere(no->esquerda, categ);
     else if(strcmp(categ->categName, no->categ->categName) > 0)
         no->direita = avl_insere(no->direita, categ);
-    else {
+    else
         return no;
-    }
 
     /* 2. atualiza a altura deste no ancestral */
     no->altura = max(avl_altura(no->esquerda), avl_altura(no->direita)) + 1;
@@ -324,6 +322,7 @@ no_avl* avl_insere(no_avl *no, category_t* categ)
     		return roda_direita(no);
     	}
     }
+
     /* caso esteja balanceada retorna o apontador para o no (inalterado) */
     return no;
 }
@@ -470,29 +469,34 @@ int artigo_adiciona(arvore_avl *avl, elemento_t* elem, char *categName, int capC
         categ = no->categ;
         if(categ->itemTree->tamanho >= capCateg)
             return 0;
+
+        if(!heap_insere(categ->itemTree, elem))
+            return 0;
     }
     else
     {
         heap *h = heap_nova(capCateg);
         if(!h) return 0;
+        if(!heap_insere(h, elem))
+        {
+            heap_apaga(h);
+            return 0;
+        }
+
         categ = novaCategoria(h, categName);
         if(!categ)
         {
             heap_apaga(h);
             return 0;
         }
+        avl->raiz = avl_insere(avl->raiz, categ);
 
-        if(avl->raiz == NULL) no = avl->raiz = avl_novo_no(categ);
-        else no = avl_insere(avl->raiz, categ);
-
-        if(!no)
+        if(!avl->raiz)
         {
             categoriaApaga(categ);
             return 0;
         }
     }
-
-    heap_insere(categ->itemTree, elem);
 
     return 1;
 }
