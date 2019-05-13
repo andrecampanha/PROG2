@@ -145,6 +145,32 @@ int heap_insere(heap *h, elemento_t* elem)
     return 0;
 }
 
+void heap_shift_down(heap *h, int curr)
+{
+    if(h == NULL) return;
+    if(curr < RAIZ || curr > h->tamanho) return;
+    int leftChild = FILHO_ESQ(curr);
+    int rightChild = FILHO_DIR(curr);
+
+    if(leftChild > h->tamanho && rightChild > h->tamanho)
+        return;
+
+    int selectedChild;
+    if(leftChild > h->tamanho || h->elementos[rightChild]->priorityVal > h->elementos[leftChild]->priorityVal)
+        selectedChild = rightChild;
+    else
+        selectedChild = leftChild;
+
+    if(h->elementos[selectedChild]->priorityVal > h->elementos[curr]->priorityVal)
+    {
+        elemento_t *aux = h->elementos[curr];
+        h->elementos[curr] = h->elementos[selectedChild];
+        h->elementos[selectedChild] = aux;
+
+        curr = selectedChild;
+        heap_shift_down(h, selectedChild);
+    }
+}
 
 elemento_t* heap_remove(heap * h)
 {
@@ -154,30 +180,10 @@ elemento_t* heap_remove(heap * h)
     h->elementos[RAIZ] = h->elementos[h->tamanho];
     h->tamanho--;
 
-    int curr = RAIZ;
-    int leftChild = FILHO_ESQ(curr);
-    int rightChild = FILHO_DIR(curr);
-    int selectedChild;
-
-    while(leftChild <= h->tamanho)
-    {
-        selectedChild = leftChild;
-        if(rightChild <= h->tamanho && h->elementos[rightChild]->priorityVal < h->elementos[leftChild]->priorityVal)
-            selectedChild = rightChild;
-        
-        if(h->elementos[curr]->priorityVal > h->elementos[selectedChild]->priorityVal)
-        {
-            elemento_t *aux = h->elementos[curr];
-            h->elementos[curr] = h->elementos[selectedChild];
-            h->elementos[selectedChild] = aux;
-
-            curr = selectedChild;
-        } else break;
-    }
+    heap_shift_down(h, RAIZ);
 
     return item;
 }
-
 
 
 void mostraHeap(heap *h)
@@ -519,7 +525,8 @@ elemento_t *elemento_cpy(elemento_t *ori)
 ///   Implementacao montagem montra (5.5)   ///
 elemento_t** criar_montra(arvore_avl* avl, const char* categName, int numPorItem, int totalItems, int* tamanhoArray)
 {
-    if(avl == NULL || categName == NULL) return NULL;
+    *tamanhoArray = 0;
+    if(avl == NULL || categName == NULL || tamanhoArray == NULL) return NULL;
 
     no_avl *no = avl_pesquisa(avl->raiz, categName);
     if(no == NULL || no->categ == NULL) return NULL;
@@ -538,7 +545,6 @@ elemento_t** criar_montra(arvore_avl* avl, const char* categName, int numPorItem
         heap_apaga(haux);
         return NULL;
     }
-    *tamanhoArray = 0;
 
     elemento_t *new, *cur;
 
@@ -549,14 +555,15 @@ elemento_t** criar_montra(arvore_avl* avl, const char* categName, int numPorItem
         new->qty = min(min(numPorItem, totalItems), cur->qty);
         
         totalItems -= new->qty;
+        cur->qty -= new->qty;
 
         arr[*tamanhoArray] = new;
         (*tamanhoArray)++;
 
         if(cur->qty > 0)
-        {
             heap_insere(haux, cur);
-        }
+        else
+            elemento_apaga(cur);
     }
 
     while(haux->tamanho > 0)
