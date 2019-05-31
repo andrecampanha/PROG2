@@ -16,9 +16,10 @@ int distancia_cache(grafo *g, int origem, int destino, tabela_dispersao *cache)
     char chave[50];
     sprintf(chave, "%d/%d", origem, destino);
 
-    if(tabela_existe(cache, chave) == TABDISPERSAO_EXISTE)
+    char *guardado;
+    if((guardado = tabela_valor(cache, chave)) != NULL)
     {
-        return atoi(tabela_valor(cache, chave));
+        return atoi(guardado);
     }
 
     int res;

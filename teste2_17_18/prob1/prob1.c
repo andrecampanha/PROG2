@@ -30,32 +30,14 @@ char* seleciona_por_ordem(heap *h, int k)
 {
 	if(!h || k > h->tamanho) return NULL;
 	heap *hcpy = heap_nova(h->tamanho);
-	char *res;
-	elemento *elem;
-
 	if(!hcpy) return NULL;
+
 	for(int i = 1; i <= h->tamanho; i++)
 	{
-		elem = malloc(sizeof(elemento));
-		if(!elem)
-		{
-			heap_apaga(hcpy);
-			return NULL;
-		}
-		elem->prioridade = h->elementos[i]->prioridade;
-		elem->valor = malloc(sizeof(char) * (strlen(h->elementos[i]->valor) + 1));
-		if(!elem->valor)
-		{
-			free(elem);
-			heap_apaga(hcpy);
-			return NULL;
-		}
-		strcpy(elem->valor, h->elementos[i]->valor);
-		hcpy->elementos[i] = elem;
+		heap_insere(hcpy, h->elementos[i]->valor, h->elementos[i]->prioridade);
 	}
-	hcpy->tamanho = h->tamanho;
-	hcpy->capacidade = h->capacidade;
 
+	char *res;
 	while(k > 0)
 	{
 		res = heap_remove(hcpy);
